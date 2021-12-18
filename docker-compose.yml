@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    container_name: flask
+    ports:
+      - 5000:5000
+
+  proxy:
+    image: nginx:1.21.4-alpine
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates  # nginx confファイルのテンプレート
+      - ./nginx/html:/var/www/html
+    restart: always
+    ports:
+      - "8888:80"
+    env_file:
+      - ./nginx/conf/conf.env # nginx用の環境変数
