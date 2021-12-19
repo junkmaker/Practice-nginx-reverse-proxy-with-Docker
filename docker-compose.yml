@@ -11,9 +11,11 @@ services:
     image: nginx:1.21.4-alpine
     volumes:
       - ./nginx/templates:/etc/nginx/templates  # nginx confファイルのテンプレート
+      - ./nginx/ssl:/etc/nginx/ssl # 証明書関連
       - ./nginx/html:/var/www/html
     restart: always
     ports:
       - "8888:80"
+      - "4443:443"
     env_file:
       - ./nginx/conf/conf.env # nginx用の環境変数
