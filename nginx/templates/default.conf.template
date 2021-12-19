@@ -1,43 +1,31 @@
-server { # HTTPリバースプロキシ
+# http redirect to https
+# httpアクセス時に301リダイレクトを実行
+server {
     listen      ${NGINX_PORT};
     server_name ${NGINX_HOST};
-    root        /var/www/html;
-
-    # アクセスログ 全部取る
-    access_log  /var/log/nginx/host.access.log  main;
-
-    # ロケーション設定
-    location /flask/ {
-        proxy_pass http://${NGINX_FE_HOST}:5000/;
-        proxy_set_header Host               $host;
-        proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Host   $host;
-        proxy_set_header X-Forwarded-Server $host;
-        proxy_set_header X-Real-IP          $remote_addr;
-        proxy_set_header X-Forwarded-Proto  http;
-    }
+    return 301 https://$host$request_uri;
 }
 
 server { # HTTPSリバースプロキシ
     listen      ${NGINX_SSL_PORT};
     server_name ${NGINX_SSL_HOST};
     root        /var/www/html;
+    index       index.html;
 
     # 証明書を設定
     ssl_certificate     /etc/nginx/ssl/server.crt;
     ssl_certificate_key /etc/nginx/ssl/server.key;
 
-    # アクセスログ 全部取る
+    # アクセスログ設定
     access_log  /var/log/nginx/host.access.log  main;
 
-    # ロケーション設定
+    # リバースプロキシ設定
+    proxy_set_header X-Real-IP          $remote_addr;
+    proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
+    proxy_set_header Host               $host;
+    proxy_redirect off;
+    proxy_max_temp_file_size 0;
     location /flask/ {
-        proxy_pass http://${NGINX_FE_HOST}:5000/;
-        proxy_set_header Host               $http_host;
-        proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Host   $host;
-        proxy_set_header X-Forwarded-Server $host;
-        proxy_set_header X-Real-IP          $remote_addr;
-        proxy_redirect http:// https://;
+        proxy_pass http://${FE_HOST}:${FE_PORT}/;  
     }
 }
